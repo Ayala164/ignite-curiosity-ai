@@ -3,13 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, BookOpen, Sparkles } from "lucide-react";
 
-export const WelcomeScreen = ({ lesson, onStartLesson }) => {
+export const WelcomeScreen = ({ lesson, onStartLesson, onBack }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-light/20 to-secondary/30 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl shadow-2xl">
         <CardHeader className="text-center space-y-4 pb-6">
           <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mb-4">
             <Sparkles className="w-10 h-10 text-white" />
+          </div>
+          
+          <div className="flex justify-start mb-4">
+            <Button variant="outline" onClick={onBack}>
+              ← חזור לרשימת השיעורים
+            </Button>
           </div>
           
           <div>
@@ -40,7 +46,7 @@ export const WelcomeScreen = ({ lesson, onStartLesson }) => {
               <Users className="w-6 h-6 text-secondary-foreground" />
               <div>
                 <p className="font-medium text-sm text-foreground">משתתפים</p>
-                <p className="text-sm text-muted-foreground">{lesson.participants.length} ילדים</p>
+                <p className="text-sm text-muted-foreground">{lesson.participants?.length || 0} ילדים</p>
               </div>
             </div>
             
@@ -49,14 +55,15 @@ export const WelcomeScreen = ({ lesson, onStartLesson }) => {
               <div>
                 <p className="font-medium text-sm text-foreground">משך</p>
                 <p className="text-sm text-muted-foreground">
-                  {lesson.steps.reduce((total, step) => total + (step.duration || 5), 0)} דקות
+                  {lesson.steps?.reduce((total, step) => total + (step.duration || 5), 0) || 30} דקות
                 </p>
               </div>
             </div>
           </div>
 
           {/* רשימת המשתתפים */}
-          <div>
+          {lesson.participants && lesson.participants.length > 0 && (
+            <div>
             <h3 className="font-bold text-lg mb-3 text-foreground">משתתפי השיעור</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {lesson.participants.map((child, index) => (
@@ -71,10 +78,12 @@ export const WelcomeScreen = ({ lesson, onStartLesson }) => {
                 </div>
               ))}
             </div>
-          </div>
+            </div>
+          )}
 
           {/* תוכן השיעור */}
-          <div>
+          {lesson.steps && lesson.steps.length > 0 && (
+            <div>
             <h3 className="font-bold text-lg mb-3 text-foreground">מהלך השיעור</h3>
             <div className="space-y-2">
               {lesson.steps.map((step, index) => (
@@ -94,7 +103,8 @@ export const WelcomeScreen = ({ lesson, onStartLesson }) => {
                 </div>
               ))}
             </div>
-          </div>
+            </div>
+          )}
 
           {/* כפתור התחלה */}
           <div className="text-center pt-4">

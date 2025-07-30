@@ -8,20 +8,13 @@ import { ChatMessage } from "./ChatMessage";
 import { ParticipantList } from "./ParticipantList";
 import { mockChildResponses } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/hooks/useAPI";
+import { socketService } from "@/services/socket";
 
-export const LessonInterface = ({ lesson, onEndLesson }) => {
-  const [session, setSession] = useState({
-    id: `session-${Date.now()}`,
-    lessonId: lesson.id,
-    messages: [],
-    currentStep: 0,
-    currentSpeaker: null,
-    isActive: true,
-    startTime: new Date()
-  });
+export const LessonInterface = ({ lesson, sessionId, onEndLesson }) => {
+  const { session, loading, error, addMessage: addMessageToSession, updateSession } = useSession(sessionId);
   
   const [isAISpeaking, setIsAISpeaking] = useState(false);
-  const [childResponseIndex, setChildResponseIndex] = useState({});
   const messagesEndRef = useRef(null);
   const { toast } = useToast();
 
@@ -32,29 +25,63 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [session.messages]);
+  }, [session?.messages]);
 
+  // Initialize socket connection
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const socket = socketService.connect();
+    socketService.joinLesson(sessionId, 'teacher-user');
+
+    // Listen for new messages
+    socketService.onNewMessage((message) => {
+      // Message will be handled by the useSession hook
+    });
+
+    // Listen for step changes
+    socketService.onStepChanged(({ newStep }) => {
+      // Update local state if needed
+    });
+
+    return () => {
+      socketService.disconnect();
+    };
+  }, [sessionId]);
   // הוספת הודעה חדשה
-  const addMessage = (senderId, senderName, content, senderType) => {
-    const newMessage = {
-      id: `msg-${Date.now()}-${Math.random()}`,
+  const addMessage = async (senderId, senderName, content, senderType) => {
+    try {
+      const messageData = {
       senderId,
       senderName,
       senderType,
-      content,
-      timestamp: new Date()
-    };
+      content
+      };
 
-    setSession(prev => ({
-      ...prev,
-      messages: [...prev.messages, newMessage]
-    }));
+      // Add message via API
+      await addMessageToSession(messageData);
+      
+      // Also send via socket for real-time updates
+      socketService.sendMessage({
+        sessionId,
+        ...messageData
+      });
+    } catch (error) {
+      console.error('Error adding message:', error);
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשלוח הודעה",
+        variant: "destructive"
+      });
+    }
   };
 
   // התחלת השיעור עם ברכה
   useEffect(() => {
-    const startLesson = () => {
-      addMessage(
+    if (!session || session.messages.length > 0) return;
+
+    const startLesson = async () => {
+      await addMessage(
         "ai-teacher",
         "המנחה",
         `שלום ילדים יקרים! ברוכים הבאים לשיעור "${lesson.title}". אני מאוד נרגש לבלות איתכם ולחקור יחד נושאים מרתקים! 🌟`,
@@ -62,27 +89,42 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
       );
       
       setTimeout(() => {
-        const currentStep = lesson.steps[0];
-        addMessage("ai-teacher", "המנחה", currentStep.aiPrompt, "ai");
+        if (lesson.steps && lesson.steps.length > 0) {
+          const currentStep = lesson.steps[0];
+          addMessage("ai-teacher", "המנחה", currentStep.aiPrompt, "ai");
+        }
       }, 2000);
     };
 
     startLesson();
-  }, [lesson]);
+  }, [lesson, session]);
 
   // מעבר לשלב הבא
-  const moveToNextStep = () => {
+  const moveToNextStep = async () => {
+    if (!session || !lesson.steps) return;
+
     const nextStepIndex = session.currentStep + 1;
     if (nextStepIndex < lesson.steps.length) {
-      setSession(prev => ({ ...prev, currentStep: nextStepIndex }));
+      try {
+        await updateSession({ currentStep: nextStepIndex });
+        socketService.changeStep(sessionId, nextStepIndex);
+        
       const nextStep = lesson.steps[nextStepIndex];
       
       setTimeout(() => {
-        addMessage("ai-teacher", "המנחה", nextStep.aiPrompt, "ai");
+          addMessage("ai-teacher", "המנחה", nextStep.aiPrompt, "ai");
       }, 1000);
+      } catch (error) {
+        console.error('Error moving to next step:', error);
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לעבור לשלב הבא",
+          variant: "destructive"
+        });
+      }
     } else {
       // סיום השיעור
-      addMessage(
+      await addMessage(
         "ai-teacher", 
         "המנחה", 
         "איזה שיעור נפלא היה לנו! תודה לכולכם על השתתפות פעילה ורעיונות מדהימים. אתם יזמים אמיתיים! 🎉", 
@@ -95,51 +137,55 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
       });
       
       setTimeout(() => {
-        setSession(prev => ({ ...prev, isActive: false }));
+        updateSession({ isActive: false });
       }, 3000);
     }
   };
 
   // בחירת ילד אקראי לתגובה
   const selectRandomChild = () => {
+    if (!lesson.participants || lesson.participants.length === 0) return null;
+
     const availableChildren = lesson.participants.filter(child => 
-      session.currentSpeaker !== child.id
+      session?.currentSpeaker !== child._id
     );
     
     if (availableChildren.length > 0) {
       const randomChild = availableChildren[Math.floor(Math.random() * availableChildren.length)];
-      setSession(prev => ({ ...prev, currentSpeaker: randomChild.id }));
+      updateSession({ currentSpeaker: randomChild._id });
+      socketService.changeSpeaker(sessionId, randomChild._id);
       return randomChild;
     }
     return null;
   };
 
   // תגובה של ילד (סימולציה)
-  const simulateChildResponse = () => {
+  const simulateChildResponse = async () => {
     const child = selectRandomChild();
     if (!child) return;
 
-    const currentIndex = childResponseIndex[child.id] || 0;
-    const responses = mockChildResponses[child.id] || ["כן, נכון!"];
-    const response = responses[currentIndex % responses.length];
-    
-    setChildResponseIndex(prev => ({
-      ...prev,
-      [child.id]: currentIndex + 1
-    }));
+    // Simple demo responses
+    const responses = [
+      "איזה רעיון מעניין!",
+      "אני חושב שזה נכון!",
+      "יש לי רעיון אחר...",
+      "בואו ננסה את זה!",
+      "אני מסכים!"
+    ];
+    const response = responses[Math.floor(Math.random() * responses.length)];
 
     setTimeout(() => {
-      addMessage(child.id, child.name, response, "child");
+      addMessage(child._id, child.name, response, "child");
       
       // איפוס הדובר הנוכחי אחרי תגובה
       setTimeout(() => {
-        setSession(prev => ({ ...prev, currentSpeaker: null }));
+        updateSession({ currentSpeaker: null });
       }, 1000);
     }, 1000 + Math.random() * 2000); // תגובה אחרי 1-3 שניות
   };
 
   // תגובת AI חכמה לילדים
-  const generateAIResponse = () => {
+  const generateAIResponse = async () => {
     setIsAISpeaking(true);
     
     const responses = [
@@ -158,8 +204,29 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
     }, 2000 + Math.random() * 2000);
   };
 
-  const currentStep = lesson.steps[session.currentStep];
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">טוען סשן...</p>
+        </div>
+      </div>
+    );
+  }
 
+  if (error || !session) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="text-destructive mb-4">שגיאה בטעינת הסשן</p>
+          <Button onClick={onEndLesson}>חזור</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentStep = lesson.steps && lesson.steps[session.currentStep];
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* כותרת השיעור */}
@@ -196,7 +263,7 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
                 <div className="flex gap-2">
                   <Button 
                     onClick={simulateChildResponse}
-                    disabled={!session.isActive}
+                    disabled={!session.isActive || !lesson.participants || lesson.participants.length === 0}
                     variant="outline"
                     size="sm"
                   >
@@ -212,14 +279,14 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
                   </Button>
                   <Button 
                     onClick={moveToNextStep}
-                    disabled={!session.isActive || session.currentStep >= lesson.steps.length - 1}
+                    disabled={!session.isActive || !lesson.steps || session.currentStep >= lesson.steps.length - 1}
                     size="sm"
                   >
                     שלב הבא
                   </Button>
                   <Button 
                     onClick={moveToNextStep}
-                    disabled={!session.isActive || session.currentStep >= lesson.steps.length - 1}
+                    disabled={!session.isActive || !lesson.steps || session.currentStep >= lesson.steps.length - 1}
                     variant="secondary"
                     size="sm"
                   >
@@ -232,7 +299,7 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
             <CardContent className="flex-1 p-0">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-4">
-                  {session.messages.map((message) => (
+                  {session.messages && session.messages.map((message) => (
                     <ChatMessage 
                       key={message.id} 
                       message={message} 
@@ -249,7 +316,7 @@ export const LessonInterface = ({ lesson, onEndLesson }) => {
         {/* רשימת משתתפים */}
         <div className="w-80">
           <ParticipantList 
-            participants={lesson.participants}
+            participants={lesson.participants || []}
             currentSpeaker={session.currentSpeaker}
             aiSpeaking={isAISpeaking}
           />

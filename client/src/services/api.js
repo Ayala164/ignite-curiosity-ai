@@ -31,7 +31,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      // Handle unauthorized access
+      console.warn('Unauthorized access - please login');
     }
     return Promise.reject(error);
   }
@@ -64,7 +65,6 @@ export const sessionAPI = {
 };
 
 export const authAPI = {
-  login: (credentials) => 
-    api.post('/auth/login', credentials),
+  login: (credentials) => api.post('/auth/login', credentials),
   logout: () => api.post('/auth/logout'),
 };

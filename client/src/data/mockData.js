@@ -1,129 +1,56 @@
-// ילדים מדומיינים עם אישיויות שונות
-export const mockChildren = [
-  {
-    id: "child-1",
-    name: "נועה",
-    avatar: "/api/placeholder/100/100",
-    personality: "סקרנית ואוהבת לשאול שאלות"
-  },
-  {
-    id: "child-2", 
-    name: "יונתן",
-    avatar: "/api/placeholder/100/100",
-    personality: "יצירתי ומלא רעיונות חדשים"
-  },
-  {
-    id: "child-3",
-    name: "תמר",
-    avatar: "/api/placeholder/100/100", 
-    personality: "מנהיגה טבעית ואחראית"
-  },
-  {
-    id: "child-4",
-    name: "דני",
-    avatar: "/api/placeholder/100/100",
-    personality: "מעשי ואוהב לפתור בעיות"
-  },
-  {
-    id: "child-5",
-    name: "מיה",
-    avatar: "/api/placeholder/100/100",
-    personality: "מתחשבת ותמיד עוזרת לאחרים"
-  },
-  {
-    id: "child-6",
-    name: "איתי",
-    avatar: "/api/placeholder/100/100",
-    personality: "חושב מחוץ לקופסה ואוהב הרפתקאות"
-  }
-];
+// This file is kept for reference but no longer used in production
+// All data now comes from MongoDB via the API
 
-// שלבי השיעור הראשון - "האי הבודד"
-export const lessonSteps = [
-  {
-    id: "step-1",
-    title: "פתיחה וכרות",
-    description: "הכרות עם הילדים ופתיחת האווירה",
-    aiPrompt: "בוא נכיר! אני המנחה שלכם היום. בואו כל אחד יציג את עצמו בקצרה - איך קוראים לכם ומה אתם הכי אוהבים לעשות?",
-    duration: 5
-  },
-  {
-    id: "step-2", 
-    title: "הצגת התרחיש",
-    description: "הצגת תרחיש האי הבודד",
-    aiPrompt: "נפלא! עכשיו אני רוצה שתדמיינו משהו מרגש - אתם נוחתים על אי בודד באמצע הים! באי יש יער, חוף, מעיין מים מתוקים ועוד הרבה דברים מעניינים. איך אתם מרגישים? מה הדבר הראשון שאתם רוצים לעשות?",
-    duration: 10
-  },
-  {
-    id: "step-3",
-    title: "דיון פתוח - תחושות ורעיונות",
-    description: "איסוף רעיונות ראשוניים מהילדים",
-    aiPrompt: "בואו נשמע מכל אחד - מה אתם חושבים שהכי חשוב לעשות קודם כל באי? האם אתם חושבים על הישרדות, על חקירה, או על משהו אחר?",
-    duration: 15
-  },
-  {
-    id: "step-4",
-    title: "משימה קבוצתית - תוכנית פעולה",
-    description: "בניית תוכנית פעולה משותפת",
-    aiPrompt: "אתם מדהימים! עכשיו בואו נעבוד יחד - אני רוצה שנבנה תוכנית פעולה לשבוע הראשון באי. איך נחלק תפקידים? מי יעשה מה? בואו נחשוב כמו יזמים אמיתיים!",
-    duration: 15
-  },
-  {
-    id: "step-5",
-    title: "סיכום והשראה",
-    description: "סיכום השיעור והשראה על יזמות",
-    aiPrompt: "וואו, איזה רעיונות מדהימים! ראיתי איך אתם חושבים כמו יזמים אמיתיים - מזהים בעיות, מציעים פתרונות, ועובדים בצוות. יזמות זה בדיוק זה - לראות הזדמנויות ולהפוך אותן למציאות. מה למדתם על עצמכם היום?",
-    duration: 10
-  }
-];
+// Example data structure for reference:
+/*
+Child: {
+  _id: string,
+  name: string,
+  avatar: string,
+  personality: string,
+  age: number,
+  preferences: string[]
+}
 
-// השיעור המלא
-export const mockLesson = {
-  id: "lesson-1",
-  title: "האי הבודד - הרפתקת יזמות",
-  subject: "יזמות וחשיבה יצירתית", 
-  targetAge: 9,
-  description: "שיעור פתיחה בנושא יזמות דרך תרחיש מרתק של נחיתה על אי בודד",
-  steps: lessonSteps,
-  participants: mockChildren
-};
+Lesson: {
+  _id: string,
+  title: string,
+  subject: string,
+  targetAge: number,
+  description: string,
+  steps: [{
+    id: string,
+    title: string,
+    description: string,
+    aiPrompt: string,
+    expectedResponses: string[],
+    duration: number
+  }],
+  participants: Child[],
+  isActive: boolean
+}
 
-// תגובות מוכנות מראש לילדים (לסימולציה)
-export const mockChildResponses = {
-  "child-1": [
-    "וואו איזה כיף! אני רוצה לחקור את כל האי!",
-    "אני חושבת שקודם צריך למצוא מקום בטוח לישון",
-    "יש לי רעיון! בואו נבנה בית על העץ!",
-    "אולי נוכל להכין מפה של האי?"
-  ],
-  "child-2": [
-    "אני יכול להכין כלים מעצים ואבנים!",
-    "מה אם נבנה סירה כדי לחקור איים אחרים?",
-    "יש לי רעיון מגניב - נעשה אותות עשן!",
-    "בואו נארגן תחרות - מי בונה את הבקתה הכי טובה!"
-  ],
-  "child-3": [
-    "אני חושבת שצריך לחלק תפקידים בצורה הוגנת",
-    "מי רוצה להיות האחראי על המים?",
-    "בואו נכין רשימה של כל מה שאנחנו צריכים",
-    "חשוב שכולם ירגישו בטוחים ושמחים"
-  ],
-  "child-4": [
-    "קודם כל צריך לבדוק שהמקום בטוח",
-    "אני יכול לבנות מקלט מענפים ועלים",
-    "צריך למצוא דרך להבעיר אש בבטחה",
-    "מה אם נכין מלכודות לדגים?"
-  ],
-  "child-5": [
-    "איך כולם מרגישים? לא מפחד מישהו?",
-    "בואו נוודא שכולם חברים ועוזרים אחד לשני",
-    "אולי נוכל למצוא פירות לכולם?",
-    "חשוב שכל אחד יוכל לתרום משהו"
-  ],
-  "child-6": [
-    "מה אם האי הזה קסום?!",
-    "בואו נבנה זחליל מעצים!",
-    "אולי יש במערות אוצרות נסתרים!",
-    "מה אם נעשה ספורט חדש רק באי הזה?"
-  ]
+ChatSession: {
+  _id: string,
+  lessonId: string,
+  messages: [{
+    id: string,
+    senderId: string,
+    senderName: string,
+    senderType: 'child' | 'ai',
+    content: string,
+    timestamp: Date,
+    reactions: string[]
+  }],
+  currentStep: number,
+  currentSpeaker: string,
+  isActive: boolean,
+  startTime: Date,
+  endTime: Date,
+  participants: string[]
+}
+*/
+
+export const mockData = {
+  note: "This file is for reference only. All data now comes from MongoDB."
 };
