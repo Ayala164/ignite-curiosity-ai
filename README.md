@@ -1,73 +1,177 @@
-# Welcome to your Lovable project
+# Ignite Curiosity AI - פלטפורמה חינוכית עם בינה מלאכותית
 
-## Project info
+פלטפורמה חינוכית מתקדמת המשלבת בינה מלאכותית לשיעורים אינטראקטיביים לילדים.
 
-**URL**: https://lovable.dev/projects/a94a0fb7-1dd4-41e1-b331-4197afbe307d
+## מבנה הפרויקט
 
-## How can I edit this code?
+```
+ignite-curiosity-ai/
+├── client/          # צד לקוח (React + Vite)
+├── server/          # צד שרת (Node.js + Express + MongoDB)
+├── package.json     # הגדרות פרויקט ראשיות
+└── README.md
+```
 
-There are several ways of editing your application.
+## דרישות מערכת
 
-**Use Lovable**
+- Node.js 18+ 
+- MongoDB 6.0+
+- npm או yarn
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a94a0fb7-1dd4-41e1-b331-4197afbe307d) and start prompting.
+## התקנה מהירה
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+# שכפול הפרויקט
+git clone <repository-url>
+cd ignite-curiosity-ai
 
-**Use your preferred IDE**
+# התקנת כל התלויות והגדרת קבצי סביבה
+npm run setup
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## הגדרת מסד הנתונים
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. התקן MongoDB מקומית או השתמש ב-MongoDB Atlas
+2. עדכן את `server/.env` עם כתובת MongoDB שלך:
+```
+MONGODB_URI=mongodb://localhost:27017/ignite-curiosity
+```
 
-Follow these steps:
+## הרצת הפרויקט
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### הרצה במצב פיתוח (שרת + לקוח יחד)
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### הרצה נפרדת
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+#### שרת בלבד
+```bash
+npm run dev:server
+# או
+cd server && npm run dev
+```
 
-**Use GitHub Codespaces**
+#### לקוח בלבד  
+```bash
+npm run dev:client
+# או
+cd client && npm run dev
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## כתובות
 
-## What technologies are used for this project?
+- **לקוח**: http://localhost:8080
+- **שרת**: http://localhost:5000
+- **API**: http://localhost:5000/api
+- **בדיקת בריאות**: http://localhost:5000/health
 
-This project is built with:
+## בניית הפרויקט לייצור
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+# בניית כל הפרויקט
+npm run build
 
-## How can I deploy this project?
+# בניית שרת בלבד
+npm run build:server
 
-Simply open [Lovable](https://lovable.dev/projects/a94a0fb7-1dd4-41e1-b331-4197afbe307d) and click on Share -> Publish.
+# בניית לקוח בלבד
+npm run build:client
+```
 
-## Can I connect a custom domain to my Lovable project?
+## הרצה בייצור
 
-Yes, you can!
+```bash
+# לאחר בניה
+npm start
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## API Endpoints
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### שיעורים (Lessons)
+- `GET /api/lessons` - קבלת כל השיעורים
+- `GET /api/lessons/:id` - קבלת שיעור לפי ID
+- `POST /api/lessons` - יצירת שיעור חדש
+- `PUT /api/lessons/:id` - עדכון שיעור
+- `DELETE /api/lessons/:id` - מחיקת שיעור
+
+### ילדים (Children)
+- `GET /api/children` - קבלת כל הילדים
+- `GET /api/children/:id` - קבלת ילד לפי ID
+- `POST /api/children` - יצירת ילד חדש
+- `PUT /api/children/:id` - עדכון ילד
+- `DELETE /api/children/:id` - מחיקת ילד
+
+### סשנים (Sessions)
+- `GET /api/sessions` - קבלת כל הסשנים
+- `GET /api/sessions/:id` - קבלת סשן לפי ID
+- `POST /api/sessions` - יצירת סשן חדש
+- `PUT /api/sessions/:id` - עדכון סשן
+- `POST /api/sessions/:id/messages` - הוספת הודעה לסשן
+- `DELETE /api/sessions/:id` - מחיקת סשן
+
+## Socket.IO Events
+
+### לקוח -> שרת
+- `join-lesson` - הצטרפות לשיעור
+- `send-message` - שליחת הודעה
+- `change-step` - שינוי שלב בשיעור
+- `change-speaker` - שינוי דובר נוכחי
+
+### שרת -> לקוח
+- `new-message` - הודעה חדשה
+- `step-changed` - שלב השתנה
+- `speaker-changed` - דובר השתנה
+- `user-joined` - משתמש הצטרף
+- `user-left` - משתמש עזב
+- `session-state` - מצב סשן נוכחי
+
+## טכנולוגיות
+
+### צד שרת
+- **Node.js** + **Express** - שרת ו-API
+- **MongoDB** + **Mongoose** - מסד נתונים
+- **Socket.IO** - תקשורת בזמן אמת
+- **TypeScript** - פיתוח מתקדם
+- **Express Validator** - ולידציה
+- **Helmet** + **CORS** - אבטחה
+
+### צד לקוח
+- **React 18** - ממשק משתמש
+- **TypeScript** - פיתוח מתקדם
+- **Vite** - כלי בנייה מהיר
+- **Tailwind CSS** - עיצוב
+- **Shadcn/ui** - רכיבי UI
+- **React Query** - ניהול מצב שרת
+- **Socket.IO Client** - תקשורת בזמן אמת
+- **React Router** - ניווט
+
+## פיתוח
+
+### הוספת תכונות חדשות
+1. הוסף מודל במסד הנתונים (`server/src/models/`)
+2. צור routes (`server/src/routes/`)
+3. הוסף validation
+4. צור API calls בלקוח (`client/src/services/`)
+5. בנה רכיבי UI (`client/src/components/`)
+
+### הרצת בדיקות
+```bash
+# שרת
+cd server && npm test
+
+# לקוח  
+cd client && npm test
+```
+
+## פריסה
+
+הפרויקט מוכן לפריסה על:
+- **Heroku** / **Railway** / **Render** (שרת)
+- **Vercel** / **Netlify** (לקוח)
+- **MongoDB Atlas** (מסד נתונים)
+
+## תמיכה
+
+לשאלות ותמיכה, פנה למפתחי הפרויקט.
